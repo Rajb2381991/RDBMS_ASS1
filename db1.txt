@@ -1,0 +1,55 @@
+<!------------------Create All Tables--------------------->
+
+color table =>create table color (color_id int NOT NULL primary key auto_increment,color_name varchar(255));
+
+order_user_details table =>create table order_user_details(order_user_id int NOT NULL primary key,user_id int,total_order int,order_user_date date);
+
+ALTER TABLE order_user_details MODIFY COLUMN order_user_id INT auto_increment;
+
+orders table => create table orders(order_id int NOT NULL primary key,user_id int,product_id int,order_cost decimal(8,2),
+order_date date,foreign key f_Cats(user_id) references users(user_id),foreign key f_cats1(product_id) 
+references products(product_id));
+
+ALTER TABLE orders MODIFY COLUMN order_id INT auto_increment;
+
+products table => create table products(product_id int NOT NULL primary key auto_increment,product_name varchar(255),
+color_id int,user_id int,foreign key f_cat(color_id) references color(color_id));
+
+users table => create table users(user_id int NOT NULL primary key auto_increment,user_name varchar(255),email 
+varchar(255) unique,password varchar(255),type enum('buyer','seller'));
+
+
+<!---------------------Insert All Queries----------------------------->
+insert into orders (user_id,product_id,order_cost,order_date) values (5,1,10.00,'2016-02-29'),
+(5,2,12.00,'2016-02-29'),(4,5,10.00,'2016-02-29'),(4,7,12.00,'2016-02-29'),(5,1,10.00,'2016-02-29'),(4,5,8.00,'2016-03-29'),
+(2,3,30.00,'2016-01-14');
+
+insert into products(product_name,color_id,user_id) values ('pen',1,4),('pen',2,4),('pen',3,4),('chair',1,5),('chair',4,5),('pen',4,4),('chair',2,5);
+
+insert into color(color_name) values ('red'),('green'),('blue'),('yellow'),('white'),('black');
+
+insert into users (user_name,email,password,type) values ('user1','user1@gmail.com','user1111','buyer'),('user2','user2@gmail.com','user2222','buyer'),('user3','user3@gmail.com','user3333','buyer'),('user4','user4@gmail.com','user4444','seller'),('user5','user5@gmail.com','user5555','seller');
+
+insert into order_user_details(user_id,total_order,order_user_date) values (1,2,'2016-02-29'),(2,2,'2016-02-29'),(3,1,'2016-02-29'),(4,3,'2016-03-29'),(1,1,'2016-03-29'),(2,3,'2016-03-29');
+
+<!----------------Create View  of Order Details----------------------->
+
+create view First_View as select orders.order_id,users.user_name,sum(orders.order_cost) as Total_Order,orders.order_date as Date from orders,users where orders.user_id = users.user_id  group by orders.user_id;
+select * from First_View;
+
+
+<!-------------------------monthly report For orders,products,user details -------------------->
+
+SELECT orders.order_id,orders.order_date as Order_Date,orders.order_cost as Order_Cost,GROUP_CONCAT(CONCAT_WS('=',products.product_name,orders.order_cost) SEPARATOR ';') as All_Product,sum(orders.order_cost) as Total_Cost ,(select user_name from users where user_id=products.user_id) as User_Name,(select email from users where user_id=products.user_id) as Email FROM products INNER JOIN orders ON products.product_id = orders.product_id GROUP BY products.product_id;
+
+3=>select distinct user_id,type from users;
+
+4=>select orders.order_id,users.user_name,orders.order_cost,orders.order_date from orders,users where 		 orders.user_id=users.user_id and orders.user_id IN (select user_id from users where type='seller') order by orders.user_id;
+
+5=>create view Sellers_View as select orders.order_id,users.user_name,orders.order_cost,orders.order_date from orders,users where orders.user_id=users.user_id and orders.user_id IN (select user_id from users where type='seller') order by orders.user_id;
+
+6=>select orders.order_id,(select product_name from products where product_id=orders.product_id) as Product_Name,users.user_name,MONTH (orders.order_date) as MONTH from orders,users where MONTH(CURDATE())=MONTH(orders.order_date) group by Product_Name;
+
+
+
+
